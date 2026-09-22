@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=77.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "viperf3"
+version = "0.1.0"
+description = "A pseudo-graphical (TUI) shell over the iperf3 client"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Pavel Poliansky" },
+]
+keywords = ["iperf3", "tui", "textual", "network", "bandwidth", "benchmark"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Networking :: Monitoring",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "textual>=8.2,<9",
+    "textual-plotext>=1.0,<2",
+]
+
+[project.urls]
+Homepage = "https://github.com/ilkz/viperf3"
+Repository = "https://github.com/ilkz/viperf3"
+Issues = "https://github.com/ilkz/viperf3/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+viperf3 = "viperf3.app:main"
+
+[tool.setuptools.packages.find]
+include = ["viperf3*"]
+
+[tool.setuptools.package-data]
+viperf3 = ["*.tcss"]
+"viperf3.tests" = ["fixtures/*.jsonl"]
+
+[tool.pytest.ini_options]
+testpaths = ["viperf3/tests"]

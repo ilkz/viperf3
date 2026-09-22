@@ -1,0 +1,137 @@
+/* viperf3 styles */
+
+#config-body {
+    padding: 1 2;
+}
+
+.row {
+    height: auto;
+    margin-bottom: 1;
+}
+
+.row Input {
+    margin-right: 1;
+}
+
+#host {
+    width: 3fr;
+}
+
+#port {
+    width: 1fr;
+}
+
+.row Checkbox {
+    margin-right: 2;
+}
+
+#params-grid {
+    grid-size: 2;
+    grid-columns: 24 1fr;
+    grid-rows: 3;
+    grid-gutter: 0 1;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#params-grid Label {
+    content-align: left middle;
+    height: 3;
+}
+
+.error {
+    color: $error;
+    height: auto;
+    margin: 1 0;
+}
+
+#action-row {
+    height: auto;
+    margin-top: 1;
+}
+
+/* --- test screen --- */
+#test-body {
+    height: 1fr;
+}
+
+#left-col {
+    width: 2fr;
+}
+
+#right-col {
+    width: 1fr;
+    margin-left: 1;
+}
+
+#gauge {
+    height: 4;
+    margin: 1 1 0 1;
+}
+
+#gauge-rx {
+    height: 4;
+    margin: 0 1 0 1;
+}
+
+#gauge-opts {
+    height: 1;
+    margin: 0 1;
+}
+
+#iface-info {
+    width: 1fr;
+    content-align: left middle;
+    color: $text-muted;
+}
+
+#link-scale {
+    border: none;
+    height: 1;
+    padding: 0;
+}
+
+#chart {
+    height: 1fr;
+    margin: 0 1 0 1;
+    border: round $primary;
+    border-title-align: center;
+}
+
+#bars {
+    height: 1fr;
+    margin: 0 1 1 1;
+}
+
+#stats {
+    height: auto;
+    margin-bottom: 1;
+}
+
+#log {
+    height: 1fr;
+    border: round $primary;
+}
+
+#test-actions {
+    height: auto;
+    padding: 0 1;
+}
+
+#test-actions Button {
+    margin-right: 1;
+}
+
+/* --- modal --- */
+#modal-box {
+    width: 50;
+    height: auto;
+    padding: 1 2;
+    border: thick $primary;
+    background: $surface;
+    align: center middle;
+}
+
+SavePresetModal {
+    align: center middle;
+}
