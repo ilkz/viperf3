@@ -13,13 +13,28 @@ Built with [Textual](https://textual.textualize.io/).
 
 ## Features
 
-- **Live throughput gauge** — auto-scaling bar showing the current speed.
-- **Time-series chart** — throughput over the duration of the test.
-- **Stats panel** — current / average / peak, plus TCP retransmits or UDP
-  jitter & loss.
+- **Live throughput gauges** — auto-scaling bars for the current speed. In
+  bidirectional mode there are two, Up and Down, each with its own colour.
+- **Scale to link speed** — optional: peg the gauge maximum to the link speed
+  of the egress interface instead of the peak observed during the run.
+- **Egress interface readout** — shows which interface the kernel routes the
+  test through, and the link speed reported by sysfs.
+- **Time-series chart** — a custom braille renderer. Both directions are
+  rasterised into one shared sub-pixel grid, so overlapping lines blend
+  instead of erasing one another, and crossings are highlighted.
+- **Per-stream histogram** — one bar per stream for the latest interval when
+  running with `-P N`, paired Up/Down bars under `--bidir`.
+- **Stats panel** — current / average / peak / elapsed, plus TCP retransmits
+  or UDP jitter & loss.
+- **Run log** — the exact iperf3 command line, connection details, events and
+  the closing summary with retransmits and CPU usage.
+- **Stop and restart** — explicit run status in the header. Stopping a run
+  yourself is not reported as an error, and the button turns into **Restart**
+  to repeat the same configuration on a cleared chart.
 - **Configuration form** — host, port, duration (`-t`), parallel streams (`-P`),
   interval (`-i`), omit (`-O`), UDP mode, target bitrate (`-b`), reverse (`-R`),
-  bidirectional (`--bidir`), TCP window (`-w`) and raw extra flags.
+  bidirectional (`--bidir`), TCP window (`-w`) and raw extra flags, all
+  validated before the client is launched.
 - **Presets** — save/load/delete named client configurations
   (stored in `~/.config/viperf3/presets.json`).
 - Robust, version-tolerant parsing via iperf3's `--json-stream` (requires
@@ -68,7 +83,15 @@ viperf3            # from anywhere
 ```
 
 Fill in the server host/port and parameters, then press **Enter** (or the
-**▶ Start test** button). Use **s** to stop, **Esc/b** to go back.
+**▶ Start test** button).
+
+| Key | Screen | Action |
+|-----|--------|--------|
+| `Enter`  | config | Start the test |
+| `Ctrl+S` | config | Save the current settings as a preset |
+| `Q`      | config | Quit |
+| `S`      | test   | Stop the running test |
+| `Esc` / `B` | test | Back to the configuration form |
 
 You need an iperf3 **server** to test against:
 
@@ -102,18 +125,24 @@ so it can be validated without a running server.
 
 | Module | Responsibility |
 |--------|----------------|
-| `models.py`  | Dataclasses for stream events (`Interval`, `StartInfo`, `Summary`). |
+| `models.py`  | Dataclasses for stream events: `StreamSample`, `Interval`, `StartInfo`, `Summary`. |
 | `parser.py`  | Tolerant `--json-stream` line parser. |
 | `config.py`  | `ClientConfig`, CLI argument builder, preset persistence. |
-| `runner.py`  | Async subprocess runner streaming parsed events. |
-| `widgets.py` | `SpeedGauge`, `StatsPanel`. |
-| `screens.py` | `ConfigScreen`, `TestScreen`, preset modal. |
+| `netinfo.py` | Egress interface via `ip route get`, link speed from sysfs. |
+| `runner.py`  | Locates the iperf3 binary, runs it as an async subprocess, streams parsed events. |
+| `widgets.py` | `SpeedGauge`, `DualLineChart`, `StatsPanel`, `TickCheckbox`. |
+| `screens.py` | `ConfigScreen`, `TestScreen`, `SavePresetModal`. |
 | `app.py`     | Textual `App` entry point. |
+
+Data flow: `IperfRunner` spawns `iperf3 … --json-stream`, reads stdout line by
+line, `parser.parse_line` turns each line into a dataclass, and `TestScreen`
+updates the widgets. A rendering error on one event is logged but never aborts
+the run.
 
 ## Roadmap ideas
 
 - Export results to CSV / JSON / PNG.
-- Separate Down/Up charts for bidirectional tests.
-- Run history and comparison overlay.
-- Per-stream sparklines when using `-P N`.
-- Server address book / quick re-run.
+- Run history, with past runs overlaid on the chart for comparison.
+- Server address book and quick re-run.
+- Per-stream min/avg/max across the whole run, not just the latest interval.
+- Separate jitter and packet-loss gauges for UDP.
