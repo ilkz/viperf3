@@ -2,7 +2,7 @@
 # Build a standalone viperf3 binary (no Python/venv needed on the target).
 #
 # Requirements on the build machine:
-#   - the project venv with dev deps:  .venv/bin/pip install pyinstaller
+#   - pyinstaller, either in the project venv or on PATH
 #   - libpython3.10 (apt install libpython3.10) — PyInstaller needs the shared lib
 #
 # The result is dist/viperf3 (~18 MB).  Target machine requirements:
@@ -12,7 +12,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-.venv/bin/pyinstaller --onefile --name viperf3 \
+# Use the project venv when it exists, otherwise whatever is on PATH (CI).
+if [ -x .venv/bin/pyinstaller ]; then
+    PYINSTALLER=.venv/bin/pyinstaller
+else
+    PYINSTALLER=pyinstaller
+fi
+
+"$PYINSTALLER" --onefile --name viperf3 \
     --paths . \
     --collect-submodules viperf3 \
     --add-data "viperf3/app.tcss:viperf3" \

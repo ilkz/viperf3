@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "viperf3"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A pseudo-graphical (TUI) shell over the iperf3 client"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -43,6 +43,9 @@ dev = ["pytest>=7"]
 
 [project.scripts]
 viperf3 = "viperf3.app:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "viperf3.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["viperf3*"]

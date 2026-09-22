@@ -1,10 +1,13 @@
 """viperf3 — a pseudo-graphical shell over the iperf3 client."""
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
+from typing import Optional, Sequence
 
 from textual.app import App
 
+from . import __version__
 from .config import ClientConfig
 from .screens import ConfigScreen
 
@@ -23,7 +26,19 @@ class ViperfApp(App):
         self.push_screen(ConfigScreen())
 
 
-def main() -> None:
+def main(argv: Optional[Sequence[str]] = None) -> None:
+    parser = argparse.ArgumentParser(
+        prog="viperf3",
+        description="A pseudo-graphical (TUI) shell over the iperf3 client.",
+        epilog="Requires iperf3 >= 3.17 on PATH. Run without arguments to "
+               "open the interface.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"viperf3 {__version__}",
+    )
+    parser.parse_args(argv)
     ViperfApp().run()
 
 

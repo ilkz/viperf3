@@ -67,6 +67,23 @@ Built with [Textual](https://textual.textualize.io/).
 > This installs to `/usr/local/bin/iperf3`, which viperf3 prefers over any
 > older binary earlier on `PATH`.
 
+## Download
+
+Prebuilt standalone binaries are attached to every
+[release](https://github.com/ilkz/viperf3/releases). They carry their own
+Python runtime, so nothing but iperf3 is needed on the target machine:
+
+```bash
+curl -L -o viperf3 \
+  https://github.com/ilkz/viperf3/releases/latest/download/viperf3-linux-x86_64
+chmod +x viperf3 && sudo mv viperf3 /usr/local/bin/
+viperf3 --version
+```
+
+Swap `x86_64` for `aarch64` on 64-bit ARM. Each asset has a `.sha256` file
+beside it. The binaries are built on Ubuntu 22.04, so they need glibc 2.35 or
+newer; on an older distribution, build from source instead.
+
 ## Install
 
 ```bash
@@ -110,6 +127,16 @@ bash build_scripts/build_binary.sh  # → dist/viperf3 (~18 MB)
 
 The target machine still needs **iperf3 ≥ 3.17** on `PATH` and a glibc at
 least as new as the build machine's.
+
+Releases are built the same way by CI. Pushing a tag that matches
+`viperf3.__version__` builds the binaries for both architectures, attaches
+them to a GitHub release together with their checksums, and fails early if the
+tag and the package version disagree:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
 
 ## Development
 

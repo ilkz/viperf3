@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            arch: x86_64
+          - runner: ubuntu-22.04-arm
+            arch: aarch64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install . pyinstaller
+
+      - name: Check that the tag matches the package version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          pkg=$(python -c "import viperf3; print(viperf3.__version__)")
+          tag="${GITHUB_REF_NAME#v}"
+          echo "package version: $pkg"
+          echo "tag:             $tag"
+          if [ "$pkg" != "$tag" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match viperf3.__version__ ($pkg)"
+            exit 1
+          fi
+
+      - name: Build the binary
+        run: bash build_scripts/build_binary.sh
+
+      - name: Smoke test
+        run: ./dist/viperf3 --version
+
+      - name: Report the glibc baseline
+        run: |
+          echo "Bootloader needs at most:"
+          objdump -T dist/viperf3 | grep -o 'GLIBC_[0-9.]*' | sort -Vu | tail -1
+          echo "Build image glibc:"
+          ldd --version | head -1
+
+      - name: Package
+        run: |
+          name="viperf3-linux-${{ matrix.arch }}"
+          mkdir -p out
+          cp dist/viperf3 "out/$name"
+          cd out
+          sha256sum "$name" > "$name.sha256"
+          ls -lh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: viperf3-linux-${{ matrix.arch }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    name: Publish the release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Write the release notes
+        run: |
+          cat > notes.md <<'MD'
+          ### Downloads
+
+          Standalone binaries, no Python needed on the target machine.
+
+          | File | For |
+          |------|-----|
+          | `viperf3-linux-x86_64` | 64-bit Intel and AMD |
+          | `viperf3-linux-aarch64` | 64-bit ARM |
+
+          ```bash
+          chmod +x viperf3-linux-x86_64
+          sudo mv viperf3-linux-x86_64 /usr/local/bin/viperf3
+          viperf3 --version
+          ```
+
+          Each binary ships a `.sha256` file next to it; verify with
+          `sha256sum -c viperf3-linux-x86_64.sha256`.
+
+          ### Requirements
+
+          - **iperf3 >= 3.17** on `PATH`. It is deliberately not bundled, and the
+            version in `apt` on Ubuntu 22.04 (3.9) is too old.
+          - glibc at least as new as the build image, which is Ubuntu 22.04
+            (glibc 2.35). Older distributions need a build of their own.
+          MD
+          cat notes.md
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" artifacts/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "viperf3 $GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            --generate-notes
